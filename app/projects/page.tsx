@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { SiteNavigation } from '../components/SiteNavigation';
-import { SocialRail, WhatsAppButton } from '../components/SocialRail';
+import { WhatsAppButton } from '../components/SocialRail';
 import { projectTypes, type ProjectCapability } from '../project-capabilities';
 
 export const metadata: Metadata = {
@@ -22,7 +22,7 @@ export default function ProjectsPage() {
   return (
     <>
       <a className="skip" href="#project-list">Skip to project capabilities</a>
-      <SocialRail />
+
       <WhatsAppButton />
       <header className="hero projects-hero">
         <SiteNavigation />

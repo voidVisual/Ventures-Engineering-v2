@@ -1,209 +1,164 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { ContactSection } from './components/ContactSection';
-import { SiteNavigation } from './components/SiteNavigation';
-import { SocialRail, WhatsAppButton } from './components/SocialRail';
-import { projectTypes } from './project-capabilities';
+import { useEffect, useRef, useState } from 'react';
+import { ArrowDownRight, ArrowRight, Menu, X } from 'lucide-react';
 
-type Service = { title: string; description: string };
-type Group = { title?: string; services: Service[] };
-type Discipline = {
-  id: string;
-  tone: 'dark' | 'gold' | 'amber';
-  short: string;
-  name: string;
-  description: string;
-  groups: Group[];
-};
-
-const disciplines: Discipline[] = [
-  {
-    id: 'audit', tone: 'dark', short: 'Audit and certification', name: 'Structural audit and certification',
-    description: 'Thorough structural assessment and compliance certification.',
-    groups: [{ services: [
-      { title: 'Structural audit', description: 'A full evaluation of structural health: visual inspection, material testing and load-carrying capacity, to determine adequacy and safety.' },
-      { title: 'Stability certificate', description: 'Official stability certification as per industry standards, confirming a building is sound for occupancy and continued use.' },
-      { title: 'Estimation and costing', description: 'Accurate cost estimates for repair, strengthening and rehabilitation, based on detailed assessment and a bill of quantities.' },
-    ] }],
-  },
-  {
-    id: 'ndt', tone: 'gold', short: 'Testing', name: 'Non-destructive testing',
-    description: 'Advanced testing methods that assess structural health without causing damage.',
-    groups: [
-      { title: 'On RCC structures', services: [
-        { title: 'Rebar scanning', description: 'Detects and maps reinforcement in concrete to verify cover depth, bar diameter and spacing.' },
-        { title: 'Rebound hammer test', description: 'Estimates in-situ compressive strength by measuring surface hardness rebound values.' },
-        { title: 'Ultrasonic pulse velocity test', description: 'Evaluates concrete quality and homogeneity and detects internal flaws using ultrasonic waves.' },
-        { title: 'Carbonation depth test', description: 'Measures the carbonation front to assess vulnerability to reinforcement corrosion.' },
-        { title: 'Concrete core test', description: 'Extracts cores for laboratory testing and accurate compressive strength.' },
-        { title: 'Half-cell potential test', description: 'Assesses the probability of rebar corrosion through electrochemical potential.' },
-      ] },
-      { title: 'On steel members', services: [
-        { title: 'Ultrasonic thickness gauge test', description: 'Precisely measures member thickness to detect corrosion loss.' },
-        { title: 'Dye and liquid penetration test', description: 'Detects surface cracks and discontinuities in steel weldments.' },
-        { title: 'Flaw detection test', description: 'Identifies internal and surface flaws in structural steel members.' },
-        { title: 'Vibration meter test', description: 'Measures and analyses structural vibrations for dynamic assessment.' },
-        { title: 'Magnetic particle test', description: 'Detects surface and near-surface defects in ferromagnetic materials.' },
-      ] },
-      { title: 'On road and paving surfaces', services: [
-        { title: 'Skid resistance test', description: 'Measures pavement surface friction for road safety assessment and compliance.' },
-      ] },
-    ],
-  },
-  {
-    id: 'design', tone: 'amber', short: 'Design and detailing', name: 'Design and detailing',
-    description: 'Structural design and detailed engineering drawings for every structure type.',
-    groups: [{ services: [
-      { title: 'PEB structures', description: 'Pre-engineered building design and detailing for industrial and commercial use, with optimised material and fast erection.' },
-      { title: 'Steel structures', description: 'Complete steel design, analysis and connection detailing for buildings, industrial structures and special facilities.' },
-      { title: 'RCC structures', description: 'Reinforced concrete design for residential, commercial and industrial buildings, with code-compliant analysis and detailing.' },
-      { title: 'Erection and shop ticket drawings', description: 'Fabrication and erection drawings for precast members, columns, spandrels, double T sections, shear walls and hollow core.' },
-    ] }],
-  },
-  {
-    id: 'infra', tone: 'gold', short: 'Infrastructure', name: 'Infrastructure',
-    description: 'Engineering solutions for large-scale infrastructure and industrial projects.',
-    groups: [{ services: [
-      { title: 'Tunnels', description: 'Lining design, portal structures and condition assessment of existing tunnels.' },
-      { title: 'Roads and highways', description: 'Bridges, culverts, retaining walls and pavement assessment for road infrastructure.' },
-      { title: 'Industrial structures', description: 'Design and assessment of power plants, silos, cooling towers, chimneys and other specialised facilities.' },
-      { title: 'As-built drawings', description: 'Precise documentation of residential, commercial, industrial and infrastructure projects, using advanced surveying instruments.' },
-    ] }],
-  },
-  {
-    id: 'repair', tone: 'dark', short: 'Repair and strengthening', name: 'Repair and strengthening consultancy',
-    description: 'Expert consultancy for structural repair, rehabilitation and strengthening.',
-    groups: [{ services: [
-      { title: 'Repair methodology', description: 'Detailed repair methods built on structural assessment and material test results.' },
-      { title: 'Strengthening design', description: 'Carbon fibre wrapping, steel plate bonding and concrete jacketing designed to restore capacity.' },
-      { title: 'Rehabilitation planning', description: 'Plans that extend the service life of ageing structures while keeping safety standards.' },
-      { title: 'Quality assurance', description: 'Third-party inspection during repair and strengthening, to confirm compliance with specifications.' },
-    ] }],
-  },
+const services = [
+  { n: '01', title: 'Assess', text: 'Structural audits, stability certification and non-destructive testing for buildings and infrastructure.' },
+  { n: '02', title: 'Design', text: 'RCC, steel and pre-engineered building design, with coordinated drawings and clear calculations.' },
+  { n: '03', title: 'Deliver', text: 'Repair, strengthening and rehabilitation plans built around verified site conditions.' },
 ];
 
-const totalServices = disciplines.reduce(
-  (total, discipline) => total + discipline.groups.reduce((sum, group) => sum + group.services.length, 0),
-  0,
-);
+const capabilities = [
+  { title: 'Structural assessment', type: 'INSPECTION · TESTING', image: 'photo-1511818966892-d7d671e672a2' },
+  { title: 'Industrial structures', type: 'DESIGN · DETAILING', image: 'photo-1486406146926-c627a92ad1ab' },
+  { title: 'Repair & strengthening', type: 'REHABILITATION · QA', image: 'photo-1504307651254-35680f356dfd' },
+];
 
 export default function HomePage() {
-  const [activeDiscipline, setActiveDiscipline] = useState(disciplines[0].id);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const capabilitySection = useRef<HTMLElement>(null);
+  const capabilityTrack = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const sections = disciplines
-      .map(({ id }) => document.getElementById(id))
-      .filter((section): section is HTMLElement => section !== null);
+    const section = capabilitySection.current;
+    const track = capabilityTrack.current;
+    if (!section || !track) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) setActiveDiscipline(entry.target.id);
-        });
-      },
-      { rootMargin: '-35% 0px -55% 0px' },
-    );
+    let frame = 0;
+    let distance = 0;
 
-    sections.forEach((section) => observer.observe(section));
-    return () => observer.disconnect();
+    const measure = () => {
+      const clipFrame = section.querySelector<HTMLElement>('.capabilities-sticky');
+      const lastCard = track.lastElementChild as HTMLElement | null;
+      if (!clipFrame || !lastCard) return;
+
+      // Measure the real painted endpoint against the sticky frame's clip edge.
+      // The track is temporarily reset so resizing or a mid-gallery remeasure
+      // cannot bake its current horizontal offset into the scroll distance.
+      const previousTransform = track.style.transform;
+      const previousTransition = track.style.transition;
+      track.style.transition = 'none';
+      track.style.transform = 'none';
+      distance = Math.max(0, Math.ceil(lastCard.getBoundingClientRect().right - clipFrame.getBoundingClientRect().right) + 2);
+      track.style.transform = previousTransform;
+      track.style.transition = previousTransition;
+
+      const pinnedHeight = clipFrame.getBoundingClientRect().height;
+      section.style.setProperty('--capability-distance', `${distance}px`);
+      // Sticky only releases after its own visible frame plus all horizontal
+      // travel have been consumed. Using window height here left a gap at some
+      // browser zoom levels because the pinned frame has a minimum height.
+      section.style.height = `${Math.ceil(pinnedHeight + distance)}px`;
+      update();
+    };
+
+    const update = () => {
+      frame = 0;
+      // The pinned section gets exactly one viewport of vertical travel per
+      // pixel the track must move, so it can only release after the last card.
+      const horizontalOffset = Math.min(distance, Math.max(0, -section.getBoundingClientRect().top));
+      const progress = distance > 0 ? horizontalOffset / distance : 0;
+      track.style.transform = `translate3d(${-horizontalOffset}px, 0, 0)`;
+      section.style.setProperty('--capability-progress', `${progress}`);
+    };
+
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+
+    measure();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', measure);
+    const images = track.querySelectorAll('.capability-image');
+    images.forEach((image) => {
+      const background = getComputedStyle(image).backgroundImage;
+      const source = background.match(/url\(["']?(.*?)["']?\)/)?.[1];
+      if (source) { const preload = new Image(); preload.src = source; preload.onload = measure; }
+    });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', measure);
+      window.cancelAnimationFrame(frame);
+    };
   }, []);
 
+  async function submitInquiry(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSending(true);
+    const form = event.currentTarget;
+    const values = Object.fromEntries(new FormData(form).entries());
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: values.name, email: values.email, phone: values.phone, serviceNeeded: values.service, message: values.message }),
+      });
+      if (!response.ok) throw new Error('Request failed');
+      setSent(true);
+      form.reset();
+    } catch {
+      window.location.href = 'mailto:info@venture.cec?subject=Project%20enquiry';
+    } finally { setSending(false); }
+  }
+
   return (
-    <>
-      <a className="skip" href="#cats">Skip to services</a>
-      <SocialRail />
-      <WhatsAppButton />
-      <header className="hero">
-        <SiteNavigation />
-        <div className="stage pad">
-          <div>
-            <h1>Services<em>From the first audit to the final drawing.</em></h1>
-            <p className="sub">Structural design, testing and rehabilitation for buildings, industrial sites and infrastructure, delivered by one accountable team.</p>
-            <div className="cta-row"><a className="btn amb" href="#audit">Explore services</a><a className="btn glass" href="#contact">Talk to an engineer</a></div>
-            <p className="facts"><b>{totalServices}</b> services across five disciplines, from audit to rehabilitation.</p>
-          </div>
-          <aside className="hero-aside" aria-label="Engineering process">
-            <span className="hero-aside-kicker">A considered process</span>
-            <ol>
-              <li><span>01</span><div><strong>Assess</strong><small>Understand the structure and its condition.</small></div></li>
-              <li><span>02</span><div><strong>Test</strong><small>Turn site evidence into useful data.</small></div></li>
-              <li><span>03</span><div><strong>Design</strong><small>Develop practical, code-led solutions.</small></div></li>
-              <li><span>04</span><div><strong>Rehabilitate</strong><small>Support safe repair and continued use.</small></div></li>
-            </ol>
-            <span className="hero-aside-note">Buildings · Industry · Infrastructure</span>
-          </aside>
-        </div>
+    <main className="editorial-site">
+      <header className="editorial-nav">
+        <a className="editorial-brand" href="#top" aria-label="Ventures Engineering home">VENTURES<span> / ENGINEERING</span></a>
+        <a className="nav-contact" href="#contact">START A PROJECT <ArrowRight size={15} /></a>
+        <button className="menu-toggle" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen}>{menuOpen ? <X /> : <Menu />}<span>{menuOpen ? 'CLOSE' : 'MENU'}</span></button>
       </header>
 
-      <section className="intro pad" id="overview">
-        <h2>Five disciplines. One team that answers for the work.</h2>
-        <ol className="idx">
-          {disciplines.map((discipline, index) => {
-            const count = discipline.groups.reduce((sum, group) => sum + group.services.length, 0);
-            return <li key={discipline.id}><a className="row" href={`#${discipline.id}`}>
-              <span className="no">{String(index + 1).padStart(2, '0')}</span><span className="nm">{discipline.name}</span><span className="ds">{discipline.description}</span><span className="ct">{count} services</span>
-            </a></li>;
-          })}
-        </ol>
+      <div className={`editorial-menu ${menuOpen ? 'is-open' : ''}`} aria-hidden={!menuOpen}>
+        <nav>{[['Home', '#top'], ['Services', '/services'], ['Approach', '/approach'], ['Capabilities', '/capabilities'], ['Contact', '#contact']].map(([label, href]) => <a key={label} href={href} onClick={() => setMenuOpen(false)}>{label}<ArrowDownRight /></a>)}</nav>
+        <span>PUNE, INDIA · STRUCTURAL ENGINEERING</span>
+      </div>
+
+      <section className="editorial-hero" id="top">
+        <div className="hero-image" />
+        <div className="hero-grain" />
+        <div className="hero-content">
+          <p className="eyebrow hero-enter hero-enter-1">STRUCTURAL ENGINEERING · PUNE, INDIA</p>
+          <h1 className="hero-enter hero-enter-2">Built on<br />good <em>judgment.</em></h1>
+          <div className="hero-bottom hero-enter hero-enter-3"><p>We assess, design and strengthen the structures people rely on—bringing clear engineering to complex sites.</p><a href="#services" className="round-link" aria-label="Explore our services"><ArrowDownRight /></a></div>
+        </div>
+        <div className="hero-index"><span>01 / 04</span><span>ENGINEERING THAT ENDURES</span></div>
       </section>
 
-      <main id="cats">
-        <nav className="jump" aria-label="Service categories"><ul className="glass">
-          {disciplines.map((discipline) => <li key={discipline.id}><a className={activeDiscipline === discipline.id ? 'on' : ''} href={`#${discipline.id}`} aria-current={activeDiscipline === discipline.id ? 'true' : undefined}>{discipline.short}</a></li>)}
-        </ul></nav>
-        {disciplines.map((discipline, index) => {
-          const count = discipline.groups.reduce((sum, group) => sum + group.services.length, 0);
-          return <section className={`cat ${discipline.tone}`} id={discipline.id} key={discipline.id}>
-            <div className="in pad"><div className="side"><span className="no">0{index + 1}</span><h2>{discipline.name}</h2><p>{discipline.description}</p><span className="n">{count} services</span><a className="more" href="#contact">Enquire about this discipline</a></div>
-              <div>{discipline.groups.map((group, groupIndex) => <div key={`${discipline.id}-${groupIndex}`}>
-                {group.title && <h3 className="grp">{group.title}</h3>}
-                <ul className="items">{group.services.map((service) => <li key={service.title}><h3>{service.title}</h3><p>{service.description}</p></li>)}</ul>
-              </div>)}</div>
-            </div>
-          </section>;
-        })}
-      </main>
-
-      <section className="cat gold" id="why"><div className="in pad"><div className="side"><span className="no">Our approach</span><h2>How we work</h2><p>Three commitments behind every report, drawing and certificate.</p></div><div><ul className="items">
-        <li><h3>Integrity over impression</h3><p>Our reports, designs and audits state facts, not formalities.</p></li>
-        <li><h3>Data-driven decisions</h3><p>From test results to detailed analysis, every recommendation is backed by engineering logic.</p></li>
-        <li><h3>As-built accuracy</h3><p>Advanced surveying and measuring instruments give precise drawings and site assessments.</p></li>
-      </ul></div></div></section>
-
-      <section className="projects-section pad" id="projects">
-        <div className="projects-heading">
-          <div><span className="eyebrow">Project capabilities</span><h2>Engineering for structures that matter.</h2></div>
-          <p>Representative project types across our structural assessment, testing, design and rehabilitation services.</p>
-        </div>
-        <div className="project-grid">
-          {projectTypes.map((project) => <article className="project-card" key={project.number}>
-            <div className={`project-visual ${project.mark}`} aria-hidden="true">
-              <svg viewBox="0 0 360 180" fill="none">
-                {project.mark === 'industrial' && <g className="drawing-lines"><path d="M58 145V86l42-24v24l44-26v85M48 145h122M75 145v-25h27v25m20-29h17m-17 13h17M112 61V39h15v14M162 89h24V55h22v90M189 55V35h14v20M186 145h51M218 145V98h22v47m-20-70h15" /><path d="M87 104V92m31-2V78m47 38h12" /></g>}
-                {project.mark === 'infrastructure' && <g className="drawing-lines"><path d="M36 142h286M57 142l25-51h196l26 51M82 91c6-48 189-48 196 0M93 91v51m48-51v51m49-51v51m48-51v51M72 109h216M65 126h230M45 151h270" /><path d="M95 68h171M110 56h143" /></g>}
-                {project.mark === 'building' && <g className="drawing-lines"><path d="M92 146V50l90-25 87 25v96M76 146h206M108 62l74-20 71 20M118 72v19m28-27v27m31-35v35m32-27v27m27-19v19M118 105v21m28-28v28m31-35v35m32-28v28m27-21v21M168 146v-24h29v24M82 151h198" /><path d="M111 50V35l71-20 72 20v15" /></g>}
-              </svg>
-              <span className="project-index">{project.number}</span>
-            </div>
-            <div className="project-copy"><span className="project-scope">{project.scope}</span><h3>{project.title}</h3><p>{project.description}</p><a href="#contact">Discuss a similar project <span aria-hidden="true">↗</span></a></div>
-          </article>)}
-        </div>
-        <a className="projects-view-all" href="/projects">Explore project capabilities <span aria-hidden="true">↗</span></a>
+      <section className="manifesto reveal" id="approach">
+        <p className="eyebrow">OUR PRINCIPLE</p>
+        <h2 className="heading-reveal">Understand the structure.<br /><span>Make the next move clear.</span></h2>
+        <p className="manifesto-copy">Good engineering starts with evidence. We combine careful investigation, practical design and direct communication to help owners make confident decisions about their assets.</p>
       </section>
 
-      <section className="close pad" id="quote"><div className="cta">
-        <div><h2>Need structural engineering support?</h2><p>Tell us about your project. We reply within one working day.</p></div>
-        <div className="cta-row"><a className="btn dk" href="#contact">Get a quote</a><a className="btn" href="#contact">Talk to our team</a></div>
-      </div></section>
+      <section className="editorial-services" id="services">
+        <div className="section-top reveal"><p className="eyebrow">WHAT WE DO</p><span>01 — 03</span></div>
+        <div className="service-list">{services.map((item) => <article className="service-row reveal" key={item.n}><span className="service-number">{item.n}</span><h3 className="word-rise">{item.title}</h3><p>{item.text}</p><ArrowDownRight className="service-arrow" /></article>)}</div>
+        <p className="service-footnote">From a single building assessment to complex industrial and infrastructure scopes.</p>
+      </section>
 
-      <ContactSection />
+      <section className="capabilities-section" id="capabilities" ref={capabilitySection}>
+        <div className="capabilities-sticky">
+        <div className="section-top reveal"><div><p className="eyebrow">CAPABILITIES</p><h2 className="heading-reveal">Work shaped by<br />the real world.</h2></div><a href="/projects" className="text-link">VIEW PROJECT TYPES <ArrowRight size={16} /></a></div>
+        <div className="capability-window"><div className="capability-grid" ref={capabilityTrack}>{capabilities.map((item, i) => <a className={`capability-card capability-${i + 1}`} href="/projects" key={item.title}><div className="capability-image" style={{ backgroundImage: `linear-gradient(180deg, transparent 35%, rgba(0,0,0,.72)), url(https://images.unsplash.com/${item.image}?auto=format&fit=crop&w=1200&q=85)` }} /><span className="capability-type">{item.type}</span><div className="capability-title"><h3>{item.title}</h3><ArrowDownRight /></div></a>)}</div></div>
+        <p className="capability-note">Representative project types. Scope and methods are defined for each site after review.</p>
+        <div className="capability-progress" aria-hidden="true"><span /></div>
+        </div>
+      </section>
 
-      <footer className="pad"><div className="fg">
-        <div><div className="brand">Ventures Engineering</div><p className="q">Measured, documented and built to last.</p></div>
-        <div><h5>Services</h5><a href="#audit">Structural audit</a><a href="#ndt">NDT testing</a><a href="#design">Design and detailing</a><a href="#infra">Infrastructure</a><a href="#repair">Repair and strengthening</a></div>
-        <div><h5>Contact</h5><span>Pune, Maharashtra</span><a href="#contact">Send a project enquiry</a><a href="#projects">Project capabilities</a></div>
-      </div><div className="copy">© 2026 Ventures Engineering. All rights reserved.</div></footer>
-    </>
+      <section className="process-section">
+        <div className="process-visual"><div className="process-image" /><span className="process-stamp">MEASURE<br />THEN BUILD</span></div>
+        <div className="process-copy reveal"><p className="eyebrow">HOW WE WORK</p><h2 className="heading-reveal">Clear process.<br /><em>Sound decisions.</em></h2><ol><li><span>01</span><div><b>Understand</b><p>We define the concern, review available records and plan the right investigation.</p></div></li><li><span>02</span><div><b>Verify</b><p>Site observations and tests establish what is happening inside the structure.</p></div></li><li><span>03</span><div><b>Recommend</b><p>You receive a documented assessment and practical next steps for the asset.</p></div></li></ol></div>
+      </section>
+
+      <section className="contact-section" id="contact">
+        <div className="contact-intro reveal"><p className="eyebrow">LET’S TALK STRUCTURES</p><h2 className="heading-reveal">Start with<br /><em>the facts.</em></h2><p>Tell us what you’re working on. We’ll help define a useful next step.</p><a href="mailto:info@venture.cec">INFO@VENTURE.CEC <ArrowRight size={15} /></a></div>
+        <form className="contact-form reveal" onSubmit={submitInquiry}>{sent ? <div className="form-success"><span>THANK YOU</span><h3>Your enquiry is with our team.</h3><p>We’ll be in touch to discuss the project.</p></div> : <><label>Your name<input name="name" placeholder="Name" required /></label><label>Email address<input name="email" type="email" placeholder="you@company.com" required /></label><label>Phone number<input name="phone" type="tel" placeholder="+91" required /></label><label>What do you need?<select name="service" defaultValue=""><option value="" disabled>Select a service</option><option>Structural audit or testing</option><option>Design and detailing</option><option>Repair or strengthening</option><option>Other project enquiry</option></select></label><label className="message-field">A little about the project<textarea name="message" placeholder="Structure, location, and what you need to understand…" rows={3} /></label><button type="submit" disabled={sending}>{sending ? 'SENDING…' : 'SEND ENQUIRY'} <ArrowRight size={16} /></button></>}</form>
+      </section>
+
+      <footer className="editorial-footer"><a className="editorial-brand" href="#top">VENTURES<span> / ENGINEERING</span></a><span>PUNE, MAHARASHTRA · INDIA</span><span>© 2026 VENTURES ENGINEERING</span><a href="#top">BACK TO TOP ↑</a></footer>
+    </main>
   );
 }
